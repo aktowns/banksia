@@ -6,14 +6,6 @@ module Banksia {
         public params: {string: string};
     }
 
-    export interface CRUD {
-        index?(): Promise<IRenderable>
-        create?(): Promise<IRenderable>
-        show?(id: number): Promise<IRenderable>
-        update?(id: number): Promise<IRenderable>
-        destroy?(id: number): Promise<IRenderable>
-    }
-
     export interface IController {
 
     }
