@@ -1,0 +1,6 @@
+*.map
+*.js
+bower_components
+typings
+.DS_Store
+docs
