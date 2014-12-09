@@ -8,17 +8,22 @@ module Controllers {
 
 module Banksia {
     export class Route {
-        constructor(controller, method) {
+        private controller;
+        private method;
 
+        constructor(controller, method) {
+            this.controller = controller;
+            this.method = method;
         }
 
-        call(request: Banksia.Request) {
-
+        exec(request: Banksia.Request) {
+            console.log(Controllers[this.controller]);
+            (new Controllers[this.controller])[this.method](request);
         }
     }
 
     export class Router {
-        private static router = null;
+        private static sharedRouter = null;
         private mode = null;
         private routes = [];
         public root = null;
@@ -29,6 +34,7 @@ module Banksia {
         }
 
         add(re: RegExp, handler: Route) {
+            console.log("Adding: ", handler);
             this.routes.push({path: re, handler: Route});
         }
 
@@ -43,19 +49,19 @@ module Banksia {
         check(fragment: string = this.getFragment()) {
             this.routes
                 .map((route) => { return { route: route, frag: fragment.match(route.path) }})
-                .filter((check) => check.frag.length > 0)
+                .filter((check) => check.frag !== null)
                 .forEach((check) => {
                     check.frag.shift();
-                    console.log(check.frag);
-                    check.route.handler.call(new Banksia.Request())
+                    console.log(check.route.handler);
+                    check.route.handler.exec(new Banksia.Request())
                 });
         }
 
-        static shared() {
-            if (typeof this.router === null) {
-                this.router = new Router()
+        static getInstance() {
+            if (Router.sharedRouter === null) {
+                Router.sharedRouter = new Router()
             }
-            return this.router;
+            return Router.sharedRouter;
         }
 
         private getFragment() {
@@ -77,15 +83,15 @@ module Banksia {
 }
 
 function defineRoutes(routes) {
+    var router = Banksia.Router.getInstance();
     for (var k in routes) {
         if (routes.hasOwnProperty(k)) {
-            var controller, method = routes[k].split('#');
-            routes[k] = ((controller, method) => {
-                return (request:Banksia.Request) => {
-                    new Banksia.Route(controller, method)
-                }
+            var split = routes[k].split('#');
+            var controller = split[0], method = split[1];
+            ((controller, method) => {
+                var route = new Banksia.Route(controller, method);
+                router.add(new RegExp(k), route)
             })(controller, method);
         }
     }
-    return routes;
 }
